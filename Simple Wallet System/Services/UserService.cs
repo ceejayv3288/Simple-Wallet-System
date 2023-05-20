@@ -82,12 +82,46 @@ namespace Simple_Wallet_System.Services
             return result;
         }
 
+        public bool IsAccountNumberExist(string accountNumber)
+        {
+            bool result = false;
+            string userExistQuery = $"Select * From Users where AccountNumber='{accountNumber}'";
+            using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
+            {
+                conn.Open();
+                using (SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandText = userExistQuery;
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        result = true;
+                    }
+
+                    reader.Close();
+                }
+            }
+            return result;
+        }
+
         public int InsertRegistration(Registration registration)
         {
+            Random rnd = new Random();
             registration.RegisterDate = DateTime.Now;
-
             int result = 0;
-            string insertUserQuery = $"INSERT INTO Users (LoginName, AccountNumber, Password, Balance, RegisterDate)\r\nVALUES ('{registration.LoginName}', '{registration.AccountNumber}', HASHBYTES('SHA2_256','{registration.Password}'), {registration.Balance}, '{registration.RegisterDate}');\r\n";
+            string generatedAccountNumber = string.Empty;
+            bool isAccountNumberExist = true;
+            while (isAccountNumberExist)
+            {
+                int random = rnd.Next(1, 9999);
+                generatedAccountNumber = $"{registration.RegisterDate.Year}{registration.RegisterDate.Month.ToString("00")}{registration.RegisterDate.Day.ToString("00")}{random}";
+                isAccountNumberExist = IsAccountNumberExist(generatedAccountNumber);
+            }
+
+            string insertUserQuery = $"INSERT INTO Users (LoginName, AccountNumber, Password, Balance, RegisterDate)\r\nVALUES ('{registration.LoginName}', '{generatedAccountNumber}', HASHBYTES('SHA2_256','{registration.Password}'), {registration.Balance}, '{registration.RegisterDate}');\r\n";
             using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
             {
                 conn.Open();

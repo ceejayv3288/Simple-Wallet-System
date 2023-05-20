@@ -29,19 +29,6 @@ var host = Host.CreateDefaultBuilder()
 
 var app = ActivatorUtilities.CreateInstance<Application>(host.Services);
 app.PrintOptions();
-Registration registration = new Registration
-{
-    LoginName = "asdasdas",
-    AccountNumber = "123123123123",
-    Password = "123123123",
-    Balance = 12312312,
-    RegisterDate = DateTime.Now
-};
-Login user = new Login
-{
-    LoginName = "CeeJay",
-    Password = "password123"
-};
 
 static void BuildConfig(IConfigurationBuilder configurationBuilder)
 {

@@ -30,9 +30,10 @@ namespace Simple_Wallet_System
         public void PrintOptions()
         {
             bool validInput = false;
-            Console.WriteLine("Simple Wallet System\nChoose from the options below:\n");
+            Console.WriteLine("\n\nSimple Wallet System\nChoose from the options below:\n");
             Console.WriteLine("1. Login");
             Console.WriteLine("2. Register");
+            Console.WriteLine("3. Exit");
             while (!validInput)
             {
                 ConsoleKeyInfo level = Console.ReadKey();
@@ -118,6 +119,9 @@ namespace Simple_Wallet_System
                             PrintOptions();
                         }
                         break;
+                    case (char)ConsoleKey.D3:
+                        validInput = true;
+                        break;
                     default:
                         Console.WriteLine("Invalid Input!");
                         break;
@@ -133,7 +137,9 @@ namespace Simple_Wallet_System
             Console.WriteLine("1. Deposit");
             Console.WriteLine("2. Withdraw");
             Console.WriteLine("3. Transfer");
+            Console.WriteLine("4. Logout");
 
+            Tuple<bool, string> transactResult;
             bool validInput = false;
             ConsoleKeyInfo level = Console.ReadKey(true);
             while (!validInput)
@@ -141,12 +147,48 @@ namespace Simple_Wallet_System
                 switch (level.KeyChar)
                 {
                     case (char)ConsoleKey.D1:
-                        _transactService.DepositWithdraw(_user.AccountNumber, 12312, true);
+                        decimal amountToDeposit = 0;
+                        bool validDepositAmount = false;
+                        while (!validDepositAmount)
+                        {
+                            Console.WriteLine("Enter Amount to Add: ");
+                            string input = Console.ReadLine().Trim();
+                            if (input.All(Char.IsDigit) && decimal.Parse(input) > 0)
+                            {
+                                validDepositAmount = true;
+                                amountToDeposit = decimal.Parse(input);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Wrong amount. Try Again.\n");
+                            }
+                        }
+                        transactResult = _transactService.DepositWithdraw(_user.AccountNumber, amountToDeposit, true);
+                        Console.WriteLine(transactResult.Item2);
                         validInput = true;
+                        UserOptions();
                         break;
                     case (char)ConsoleKey.D2:
-                        _transactService.DepositWithdraw(_user.AccountNumber, 12312, false);
+                        decimal amountToWithdraw = 0;
+                        bool validWithdrawAmount = false;
+                        while (!validWithdrawAmount)
+                        {
+                            Console.WriteLine("Enter Amount to Withdraw: ");
+                            string input = Console.ReadLine().Trim();
+                            if (input.All(Char.IsDigit) && decimal.Parse(input) > 0)
+                            {
+                                validWithdrawAmount = true;
+                                amountToWithdraw = decimal.Parse(input);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Wrong amount. Try Again.\n");
+                            }
+                        }
+                        transactResult = _transactService.DepositWithdraw(_user.AccountNumber, amountToWithdraw, false);
+                        Console.WriteLine(transactResult.Item2);
                         validInput = true;
+                        UserOptions();
                         break;
                     case (char)ConsoleKey.D3:
                         string recipientAccountNumber = string.Empty;
@@ -171,18 +213,24 @@ namespace Simple_Wallet_System
                         {
                             Console.WriteLine("Enter Amount to transfer: ");
                             string input = Console.ReadLine().Trim();
-                            if (input.All(Char.IsDigit) && int.Parse(input) > 0)
+                            if (input.All(Char.IsDigit) && decimal.Parse(input) > 0)
                             {
                                 validAmount = true;
-                                amount = int.Parse(input);
+                                amount = decimal.Parse(input);
                             }
                             else
                             {
                                 Console.WriteLine("Wrong amount. Try Again.\n");
                             }
                         }
-                        _transactService.TransferBalance(_user.AccountNumber, recipientAccountNumber, amount);
+                        transactResult = _transactService.TransferBalance(_user.AccountNumber, recipientAccountNumber, amount);
+                        Console.WriteLine(transactResult.Item2);
                         validInput = true;
+                        UserOptions();
+                        break;
+                    case (char)ConsoleKey.D4:
+                        validInput = true;
+                        PrintOptions();
                         break;
                     default:
                         Console.WriteLine("Invalid Input!");

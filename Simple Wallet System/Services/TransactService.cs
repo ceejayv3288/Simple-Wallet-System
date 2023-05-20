@@ -25,9 +25,13 @@ namespace Simple_Wallet_System.Services
         public Tuple<bool, string> DepositWithdraw(string accountNumber, decimal amount, bool isDeposit)
         {
             decimal currentBalance = GetCurrentBalance(accountNumber);
+            if (currentBalance < amount && !isDeposit)
+            {
+                return Tuple.Create(false, "Insufficient Balance");
+            }
             int result = 0;
             int recordResult = 0;
-            string errorMessage = string.Empty;
+            string message = string.Empty;
             decimal updatedBalance = isDeposit ? currentBalance + amount : currentBalance - amount;
             string updateBalanceQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedBalance}\r\nWHERE AccountNumber = '{accountNumber}'";
             SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString"));
@@ -56,18 +60,19 @@ namespace Simple_Wallet_System.Services
                                     EndBalance = updatedBalance.ToString()
                                 };
                                 recordResult = RecordTransaction(transaction);
+                                message = $"Success: New Balance: {updatedBalance}";
                                 if ((int)recordResult != 1)
                                 {
                                     if (tran != null)
                                     {
                                         tran.Rollback();
                                     }
-                                    errorMessage = "Error in saving transaction record.";
+                                    message = "Error in saving transaction record.";
                                 }
                             }
                             else
                             {
-                                errorMessage = "Error in updating record.";
+                                message = "Error in updating record.";
                             }
                             tran.Commit();
                         }
@@ -81,7 +86,7 @@ namespace Simple_Wallet_System.Services
                     }
                 }
 
-                return Tuple.Create(result == 1 && recordResult == 1, errorMessage);
+                return Tuple.Create(result == 1 && recordResult == 1, message);
             }
             catch(Exception ex)
             {
@@ -97,7 +102,7 @@ namespace Simple_Wallet_System.Services
         {
             int result = 0;
             int recordResult = 0;
-            string errorMessage = string.Empty;
+            string message = string.Empty;
             decimal senderCurrentBalance = GetCurrentBalance(senderAccountNumber);
             decimal recipientCurrentBalance = GetCurrentBalance(recipientAccountNumber);
             if (senderCurrentBalance < amount)
@@ -129,18 +134,18 @@ namespace Simple_Wallet_System.Services
                                     AccountNumbers = $"{senderAccountNumber}/{recipientAccountNumber}",
                                     Amount = amount,
                                     DateOfTransaction = DateTime.Now,
-                                    EndBalance = $"Sender Balance: {updatedSenderBalance}/ Recipient Balance: {recipientCurrentBalance}"
+                                    EndBalance = $"Sender Balance: {updatedSenderBalance}/ Recipient Balance: {updatedRecipientBalance}"
                                 };
                                 recordResult = RecordTransaction(transaction);
-
+                                message = $"Success: Balance transfered from Account Number {senderAccountNumber} to {recipientAccountNumber}.\nUpdated Balance for sender is {updatedSenderBalance} while recipient is {updatedRecipientBalance}";
                                 if (recordResult != 1)
                                 {
-                                    errorMessage = "Error in saving transaction record.";
+                                    message = "Error in saving transaction record.";
                                 }
                             }
                             else
                             {
-                                errorMessage = "Error in updating record.";
+                                message = "Error in updating record.";
                             }
                             tran.Commit();
                         }
@@ -154,7 +159,7 @@ namespace Simple_Wallet_System.Services
                     }
                 }
 
-                return Tuple.Create(result == 1 && recordResult == 1, errorMessage);
+                return Tuple.Create(result == 1 && recordResult == 1, message);
             }
             catch (Exception ex)
             {
