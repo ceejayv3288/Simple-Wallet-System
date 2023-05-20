@@ -41,6 +41,19 @@ namespace Simple_Wallet_System.Services
                     conn.Close();
                 }
             }
+            if ((int)result == 1)
+            {
+                Transaction transaction = new Transaction
+                {
+                    AccountNumbers = accountNumber,
+                    Amount = amount,
+                    DateOfTransaction = DateTime.Now,
+                    TransactionType = isDeposit ? (int)TransactionTypeEnum.Deposit : (int)TransactionTypeEnum.Withdraw,
+                    EndBalance = updatedBalance.ToString()
+                };
+                RecordTransaction(transaction);
+            }
+
             return (int)result;
         }
 
