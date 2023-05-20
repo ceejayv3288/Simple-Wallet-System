@@ -22,7 +22,6 @@ var host = Host.CreateDefaultBuilder()
     .ConfigureServices((context, services) =>
     {
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IStartupService, StartupService>();
         services.AddScoped<ITransactService, TransactService>();
     })
     .UseSerilog()
@@ -30,9 +29,6 @@ var host = Host.CreateDefaultBuilder()
 
 var app = ActivatorUtilities.CreateInstance<Application>(host.Services);
 app.PrintOptions();
-//var userSvc = ActivatorUtilities.CreateInstance<UserService>(host.Services);
-//var startSvc = ActivatorUtilities.CreateInstance<StartupService>(host.Services);
-//userSvc.ReadAll();
 Registration registration = new Registration
 {
     LoginName = "asdasdas",
@@ -46,9 +42,6 @@ Login user = new Login
     LoginName = "CeeJay",
     Password = "password123"
 };
-//userSvc.Register(registration);
-//userSvc.LoginUser(user);
-//startSvc.PrintOptions();
 
 static void BuildConfig(IConfigurationBuilder configurationBuilder)
 {

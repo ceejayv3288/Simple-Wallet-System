@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simple_Wallet_System
+namespace Simple_Wallet_System.Services
 {
     public class UserService : IUserService
     {
@@ -99,7 +99,7 @@ namespace Simple_Wallet_System
                     conn.Close();
                 }
             }
-            return (int)result;
+            return result;
         }
 
         public User LoginUser(Login login)

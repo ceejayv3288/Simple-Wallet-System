@@ -1,6 +1,6 @@
 ﻿using Simple_Wallet_System.Models;
 
-namespace Simple_Wallet_System
+namespace Simple_Wallet_System.Services
 {
     public interface IUserService
     {

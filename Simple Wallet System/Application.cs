@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Simple_Wallet_System.Models;
+using Simple_Wallet_System.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
