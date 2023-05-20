@@ -121,7 +121,7 @@ namespace Simple_Wallet_System.Services
                         {
                             result = cmd.ExecuteNonQuery();
 
-                            if ((int)result == 1)
+                            if ((int)result > 0)
                             {
                                 Transaction transaction = new Transaction
                                 {
