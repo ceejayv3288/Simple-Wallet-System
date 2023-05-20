@@ -46,13 +46,15 @@ namespace Simple_Wallet_System.Services
             //Console.ReadKey();
         }
 
-        public void Register(Registration registration)
+        public bool Register(Registration registration)
         {
+            int resultReg = 0;
             bool isLoginNameExist = IsLoginNameExist(registration.LoginName);
             if (!isLoginNameExist)
             {
-                int resultReg = InsertRegistration(registration);
+                resultReg = InsertRegistration(registration);
             }
+            return resultReg == 1;
         }
 
         public bool IsLoginNameExist(string loginName)

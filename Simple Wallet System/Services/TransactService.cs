@@ -22,85 +22,120 @@ namespace Simple_Wallet_System.Services
             _config = config;
         }
 
-        public int DepositWithdraw(string accountNumber, decimal amount, bool isDeposit)
+        public Tuple<bool, string> DepositWithdraw(string accountNumber, decimal amount, bool isDeposit)
         {
-            decimal currentBalance = GetCurrentBalance(accountNumber);
-            int result = 0;
-            decimal updatedBalance = isDeposit ? currentBalance + amount : currentBalance - amount;
-            string updateBalanceQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedBalance}\r\nWHERE AccountNumber = {accountNumber}";
-            using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
+            try
             {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand())
+                decimal currentBalance = GetCurrentBalance(accountNumber);
+                int result = 0;
+                int recordResult = 0;
+                string errorMessage = string.Empty;
+                decimal updatedBalance = isDeposit ? currentBalance + amount : currentBalance - amount;
+                string updateBalanceQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedBalance}\r\nWHERE AccountNumber = '{accountNumber}'";
+                using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
                 {
-                    cmd.Connection = conn;
-                    cmd.CommandText = updateBalanceQuery;
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandText = updateBalanceQuery;
 
-                    result = cmd.ExecuteNonQuery();
+                        result = cmd.ExecuteNonQuery();
 
-                    conn.Close();
+                        conn.Close();
+                    }
                 }
-            }
-            if ((int)result == 1)
-            {
-                Transaction transaction = new Transaction
+                if ((int)result == 1)
                 {
-                    AccountNumbers = accountNumber,
-                    Amount = amount,
-                    DateOfTransaction = DateTime.Now,
-                    TransactionType = isDeposit ? (int)TransactionTypeEnum.Deposit : (int)TransactionTypeEnum.Withdraw,
-                    EndBalance = updatedBalance.ToString()
-                };
-                RecordTransaction(transaction);
-            }
+                    Transaction transaction = new Transaction
+                    {
+                        AccountNumbers = accountNumber,
+                        Amount = amount,
+                        DateOfTransaction = DateTime.Now,
+                        TransactionType = isDeposit ? (int)TransactionTypeEnum.Deposit : (int)TransactionTypeEnum.Withdraw,
+                        EndBalance = updatedBalance.ToString()
+                    };
+                    recordResult = RecordTransaction(transaction);
+                    if ((int)recordResult != 1)
+                    {
+                        errorMessage = "Error in saving transaction record.";
+                    }
+                }
+                else
+                {
+                    errorMessage = "Error in updating record.";
+                }
 
-            return (int)result;
+                return Tuple.Create(result == 1 && recordResult == 1, errorMessage);
+            }
+            catch(Exception ex)
+            {
+                return Tuple.Create(false, ex.Message);
+            }
         }
 
-        public int TransferBalance(string senderAccountNumber, string recipientAccountNumber, decimal amount)
+        public Tuple<bool, string> TransferBalance(string senderAccountNumber, string recipientAccountNumber, decimal amount)
         {
-            int result = 0;
-            decimal senderCurrentBalance = GetCurrentBalance(senderAccountNumber);
-            decimal recipientCurrentBalance = GetCurrentBalance(recipientAccountNumber);
-            if (senderCurrentBalance < amount)
+            try
             {
-
-            }
-            decimal updatedSenderBalance = senderCurrentBalance - amount;
-            decimal updatedRecipientBalance = recipientCurrentBalance + amount;
-            string updateBalancesQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedSenderBalance}\r\nWHERE AccountNumber = {senderAccountNumber}\r\nUPDATE Users\r\nSET Balance = {updatedRecipientBalance}\r\nWHERE AccountNumber = {recipientAccountNumber}";
-            using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
-            {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand())
+                int result = 0;
+                int recordResult = 0;
+                string errorMessage = string.Empty;
+                decimal senderCurrentBalance = GetCurrentBalance(senderAccountNumber);
+                decimal recipientCurrentBalance = GetCurrentBalance(recipientAccountNumber);
+                if (senderCurrentBalance < amount)
                 {
-                    cmd.Connection = conn;
-                    cmd.CommandText = updateBalancesQuery;
-
-                    result = cmd.ExecuteNonQuery();
-
-                    conn.Close();
+                    return Tuple.Create(false, "Insufficient Balance");
                 }
-            }
-            if ((int)result == 1)
-            {
-                Transaction transaction = new Transaction
+                decimal updatedSenderBalance = senderCurrentBalance - amount;
+                decimal updatedRecipientBalance = recipientCurrentBalance + amount;
+                string updateBalancesQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedSenderBalance}\r\nWHERE AccountNumber = '{senderAccountNumber}'\r\nUPDATE Users\r\nSET Balance = {updatedRecipientBalance}\r\nWHERE AccountNumber = '{recipientAccountNumber}'";
+                using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
                 {
-                    TransactionType = (int)TransactionTypeEnum.Transfer,
-                    AccountNumbers = $"{senderAccountNumber}/{recipientAccountNumber}",
-                    Amount = amount,
-                    DateOfTransaction = DateTime.Now,
-                    EndBalance = $"Sender Balance: {updatedSenderBalance}/ Recipient Balance: {recipientCurrentBalance}"
-                };
-                int recordResult = RecordTransaction(transaction);
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandText = updateBalancesQuery;
+
+                        result = cmd.ExecuteNonQuery();
+
+                        conn.Close();
+                    }
+                }
+                if ((int)result == 1)
+                {
+                    Transaction transaction = new Transaction
+                    {
+                        TransactionType = (int)TransactionTypeEnum.Transfer,
+                        AccountNumbers = $"{senderAccountNumber}/{recipientAccountNumber}",
+                        Amount = amount,
+                        DateOfTransaction = DateTime.Now,
+                        EndBalance = $"Sender Balance: {updatedSenderBalance}/ Recipient Balance: {recipientCurrentBalance}"
+                    };
+                    recordResult = RecordTransaction(transaction);
+
+                    if (recordResult != 1)
+                    {
+                        errorMessage = "Error in saving transaction record.";
+                    }
+                }
+                else
+                {
+                    errorMessage = "Error in updating record.";
+                }
+                return Tuple.Create(result == 1 && recordResult == 1, errorMessage);
             }
-            return (int)result;
+            catch (Exception ex)
+            {
+                return Tuple.Create(false, ex.Message);
+            }
         }
 
         public int RecordTransaction(Transaction transaction)
         {
             int result = 0;
-            string insertUserQuery = $"INSERT INTO Transactions(TransactionType, Amount, AccountNumbers, DateOfTransaction, EndBalance)\r\nVALUES ({transaction.TransactionType}, {transaction.Amount}, '{transaction.AccountNumbers}', {transaction.DateOfTransaction}, '{transaction.EndBalance}');";
+            string insertUserQuery = $"INSERT INTO Transactions(TransactionType, Amount, AccountNumbers, DateOfTransaction, EndBalance)\r\nVALUES ({transaction.TransactionType}, {transaction.Amount}, '{transaction.AccountNumbers}', '{transaction.DateOfTransaction}', '{transaction.EndBalance}');";
             using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
             {
                 conn.Open();

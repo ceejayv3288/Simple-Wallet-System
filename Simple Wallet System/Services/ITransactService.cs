@@ -2,7 +2,7 @@
 {
     public interface ITransactService
     {
-        public int DepositWithdraw(string accountNumber, decimal amount, bool isDeposit);
-        public int TransferBalance(string senderAccountNumber, string recipientAccountNumber, decimal amount);
+        public Tuple<bool, string> DepositWithdraw(string accountNumber, decimal amount, bool isDeposit);
+        public Tuple<bool, string> TransferBalance(string senderAccountNumber, string recipientAccountNumber, decimal amount);
     }
 }
