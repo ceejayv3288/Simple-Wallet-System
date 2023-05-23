@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33712.159
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple Wallet System", "Simple Wallet System\Simple Wallet System.csproj", "{F3CB01D9-97EB-425C-BDBB-176AF50B6B06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simple Wallet System", "Simple Wallet System\Simple Wallet System.csproj", "{F3CB01D9-97EB-425C-BDBB-176AF50B6B06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleTest", "SampleTest\SampleTest.csproj", "{D487035E-AD45-44A4-A5F8-ECA9F41F512C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F3CB01D9-97EB-425C-BDBB-176AF50B6B06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3CB01D9-97EB-425C-BDBB-176AF50B6B06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3CB01D9-97EB-425C-BDBB-176AF50B6B06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D487035E-AD45-44A4-A5F8-ECA9F41F512C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D487035E-AD45-44A4-A5F8-ECA9F41F512C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D487035E-AD45-44A4-A5F8-ECA9F41F512C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D487035E-AD45-44A4-A5F8-ECA9F41F512C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

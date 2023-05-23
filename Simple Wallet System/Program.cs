@@ -2,12 +2,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Simple_Wallet_System;
-using Simple_Wallet_System.Models;
 using Simple_Wallet_System.Services;
-using System.Data.SqlClient;
 
 var builder = new ConfigurationBuilder();
 BuildConfig(builder);
@@ -23,6 +20,7 @@ var host = Host.CreateDefaultBuilder()
     {
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITransactService, TransactService>();
+        services.AddScoped<IDbService, DbService>();
     })
     .UseSerilog()
     .Build();

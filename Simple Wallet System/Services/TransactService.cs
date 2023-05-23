@@ -2,12 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Simple_Wallet_System.Constants;
 using Simple_Wallet_System.Models;
-using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simple_Wallet_System.Services
 {
@@ -15,11 +10,13 @@ namespace Simple_Wallet_System.Services
     {
         private readonly ILogger<UserService> _logger;
         private readonly IConfiguration _config;
+        private readonly IDbService _dbService;
 
-        public TransactService(ILogger<UserService> log, IConfiguration config)
+        public TransactService(ILogger<UserService> log, IConfiguration config, IDbService dbService)
         {
             _logger = log;
             _config = config;
+            _dbService = dbService;
         }
 
         public Tuple<bool, string> DepositWithdraw(string accountNumber, decimal amount, bool isDeposit)
@@ -30,7 +27,7 @@ namespace Simple_Wallet_System.Services
                 return Tuple.Create(false, "Insufficient Balance");
             }
             int result = 0;
-            int recordResult = 0;
+            bool recordResult = false;
             string message = string.Empty;
             decimal updatedBalance = isDeposit ? currentBalance + amount : currentBalance - amount;
             string updateBalanceQuery = $"\r\nUPDATE Users\r\nSET Balance = {updatedBalance}\r\nWHERE AccountNumber = '{accountNumber}'";
@@ -61,7 +58,7 @@ namespace Simple_Wallet_System.Services
                                 };
                                 recordResult = RecordTransaction(transaction);
                                 message = $"Success: New Balance: {updatedBalance}";
-                                if ((int)recordResult != 1)
+                                if (!recordResult)
                                 {
                                     if (tran != null)
                                     {
@@ -86,7 +83,7 @@ namespace Simple_Wallet_System.Services
                     }
                 }
 
-                return Tuple.Create(result == 1 && recordResult == 1, message);
+                return Tuple.Create(result == 1 && recordResult, message);
             }
             catch(Exception ex)
             {
@@ -101,7 +98,7 @@ namespace Simple_Wallet_System.Services
         public Tuple<bool, string> TransferBalance(string senderAccountNumber, string recipientAccountNumber, decimal amount)
         {
             int result = 0;
-            int recordResult = 0;
+            bool recordResult = false;
             string message = string.Empty;
             decimal senderCurrentBalance = GetCurrentBalance(senderAccountNumber);
             decimal recipientCurrentBalance = GetCurrentBalance(recipientAccountNumber);
@@ -138,7 +135,7 @@ namespace Simple_Wallet_System.Services
                                 };
                                 recordResult = RecordTransaction(transaction);
                                 message = $"Success: Balance transfered from Account Number {senderAccountNumber} to {recipientAccountNumber}.\nUpdated Balance for sender is {updatedSenderBalance} while recipient is {updatedRecipientBalance}";
-                                if (recordResult != 1)
+                                if (!recordResult)
                                 {
                                     message = "Error in saving transaction record.";
                                 }
@@ -159,7 +156,7 @@ namespace Simple_Wallet_System.Services
                     }
                 }
 
-                return Tuple.Create(result == 1 && recordResult == 1, message);
+                return Tuple.Create(result == 1 && recordResult, message);
             }
             catch (Exception ex)
             {
@@ -171,48 +168,36 @@ namespace Simple_Wallet_System.Services
             }
         }
 
-        public int RecordTransaction(Transaction transaction)
+        public bool RecordTransaction(Transaction transaction)
         {
-            int result = 0;
-            string insertUserQuery = $"INSERT INTO Transactions(TransactionType, Amount, AccountNumbers, DateOfTransaction, EndBalance)\r\nVALUES ({transaction.TransactionType}, {transaction.Amount}, '{transaction.AccountNumbers}', '{transaction.DateOfTransaction}', '{transaction.EndBalance}');";
-            using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
-            {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = insertUserQuery;
+            bool result = false;
+            string insertTransactionQuery = $"INSERT INTO Transactions(TransactionType, Amount, AccountNumbers, DateOfTransaction, EndBalance)\r\nOUTPUT INSERTED.* VALUES (@TransactionType, @Amount, @AccountNumbers, @DateOfTransaction, @EndBalance);";
+            var transactionParam = new { TransactionType = transaction.TransactionType, Amount = transaction.Amount, AccountNumbers = transaction.AccountNumbers, DateOfTransaction = transaction.DateOfTransaction, EndBalance = transaction.EndBalance };
+            //result = _dbService.Insert<Transaction>(insertTransactionQuery, transactionParam).Result != null;
+            var ggg = _dbService.Insert<Transaction>(insertTransactionQuery, transactionParam).Result;
+            result = ggg != null;
+            //using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
+            //{
+            //    conn.Open();
+            //    using (SqlCommand cmd = new SqlCommand())
+            //    {
+            //        cmd.Connection = conn;
+            //        cmd.CommandText = insertUserQuery;
 
-                    result = cmd.ExecuteNonQuery();
+            //        result = cmd.ExecuteNonQuery();
 
-                    conn.Close();
-                }
-            }
-            return (int)result;
+            //        conn.Close();
+            //    }
+            //}
+            return result;
         }
 
         public decimal GetCurrentBalance(string accountNumber)
         {
             decimal currentBalance = 0;
-            string getBalanceQuery = $"Select * From Users where AccountNumber='{accountNumber}'";
-            using (SqlConnection conn = new SqlConnection(_config.GetValue<string>("AppSettings:ConnectionString")))
-            {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandText = getBalanceQuery;
-
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    if (reader.Read())
-                    {
-                        currentBalance = Convert.ToInt32(reader["Balance"]);
-                    }
-
-                    reader.Close();
-                }
-            }
+            string getBalanceQuery = $"Select * From Users where AccountNumber=@AccountNumber";
+            var accountNumberParam = new { AccountNumber = accountNumber };
+            currentBalance = _dbService.GetAsync<User>(getBalanceQuery, accountNumberParam).Result.Balance;
             return currentBalance;
         }
     }

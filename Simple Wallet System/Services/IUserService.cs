@@ -4,10 +4,9 @@ namespace Simple_Wallet_System.Services
 {
     public interface IUserService
     {
-        public void ReadAll();
         public bool Register(Registration registration);
         public bool IsLoginNameExist(string loginName);
-        public int InsertRegistration(Registration registration);
+        public bool InsertRegistration(Registration registration);
         public User LoginUser(Login login);
     }
 }

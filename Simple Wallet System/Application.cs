@@ -1,13 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Simple_Wallet_System.Constants;
 using Simple_Wallet_System.Models;
 using Simple_Wallet_System.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simple_Wallet_System
 {
@@ -55,7 +49,7 @@ namespace Simple_Wallet_System
                                 login.Password = Console.ReadLine().Trim();
                             }
                             _user = _userService.LoginUser(login);
-                            if (_user.AccountNumber == null)
+                            if (_user == null)
                             {
                                 Console.WriteLine("Wrong Username or Password\nTry again? [1=Yes/2=No]");
                                 login.LoginName = string.Empty;
@@ -127,8 +121,6 @@ namespace Simple_Wallet_System
                         break;
                 }
             }
-
-            //_userService.ReadAll();
         }
 
         public void UserOptions()
